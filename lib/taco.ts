@@ -21,11 +21,18 @@ export interface TacoResult {
   };
 }
 
+// Calibrated 2026-04-02 against backfilled data.
+// Tightened from original research estimates to match observed ranges:
+// - S&P: worst 30d drawdown was -13.7% (Liberation Day), -25% was too generous
+// - Inflation: observed 2.3-3.2%, narrowed from 2-6% to 2-4%
+// - T-bill: observed 3.6-4.3%, narrowed from 3-6% to 3-5%
+// This produces Liberation Day ~6-7/10 (high stress) which matches
+// Deutsche Bank's published characterization.
 const BOUNDS = {
   approval: { min: 55, max: 30 },
-  sp500: { min: 0, max: -0.25 },
-  inflation: { min: 0.02, max: 0.06 },
-  tbill: { min: 0.03, max: 0.06 },
+  sp500: { min: 0, max: -0.15 },
+  inflation: { min: 0.02, max: 0.04 },
+  tbill: { min: 0.03, max: 0.05 },
 } as const;
 
 /**

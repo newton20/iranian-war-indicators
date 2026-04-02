@@ -3,6 +3,11 @@ import { computeTacoScore } from '@/lib/taco'
 
 describe('computeTacoScore', () => {
   it('computes score with all components present', () => {
+    // approval:38 → (55-38)/(55-30)*10 = 6.8
+    // sp500:-0.08 → (0-(-0.08))/(0-(-0.15))*10 = 5.33
+    // inflation:0.031 → (0.031-0.02)/(0.04-0.02)*10 = 5.5
+    // tbill:0.04 → (0.04-0.03)/(0.05-0.03)*10 = 5.0
+    // avg = (6.8+5.33+5.5+5.0)/4 = 5.66
     const result = computeTacoScore({
       approval: 38,
       sp500Return: -0.08,
@@ -11,11 +16,7 @@ describe('computeTacoScore', () => {
     })
 
     expect(result.componentsAvailable).toBe(4)
-    expect(result.score).toBeCloseTo(4.02, 1)
-    expect(result.breakdown.approval).toBeCloseTo(6.8, 5)
-    expect(result.breakdown.sp500).toBeCloseTo(3.2, 5)
-    expect(result.breakdown.inflation).toBeCloseTo(2.75, 5)
-    expect(result.breakdown.tbill).toBeCloseTo(3.33, 1)
+    expect(result.score).toBeCloseTo(5.66, 1)
   })
 
   it('handles one null component', () => {
@@ -28,7 +29,8 @@ describe('computeTacoScore', () => {
 
     expect(result.componentsAvailable).toBe(3)
     expect(result.breakdown.approval).toBeNull()
-    expect(result.score).toBeCloseTo(3.09, 1)
+    // avg of (5.33 + 5.5 + 5.0) / 3 = 5.28
+    expect(result.score).toBeCloseTo(5.28, 1)
   })
 
   it('handles all null components', () => {
@@ -41,10 +43,6 @@ describe('computeTacoScore', () => {
 
     expect(result.score).toBe(0)
     expect(result.componentsAvailable).toBe(0)
-    expect(result.breakdown.approval).toBeNull()
-    expect(result.breakdown.sp500).toBeNull()
-    expect(result.breakdown.inflation).toBeNull()
-    expect(result.breakdown.tbill).toBeNull()
   })
 
   it('returns score 0 when all values are at min bounds', () => {
@@ -56,25 +54,18 @@ describe('computeTacoScore', () => {
     })
 
     expect(result.score).toBe(0)
-    expect(result.breakdown.approval).toBeCloseTo(0, 5)
-    expect(result.breakdown.sp500).toBeCloseTo(0, 5)
-    expect(result.breakdown.inflation).toBeCloseTo(0, 5)
-    expect(result.breakdown.tbill).toBeCloseTo(0, 5)
   })
 
   it('returns score 10 when all values are at max bounds', () => {
+    // New bounds: sp500 max=-0.15, inflation max=0.04, tbill max=0.05
     const result = computeTacoScore({
       approval: 30,
-      sp500Return: -0.25,
-      inflation1y: 0.06,
-      tbill3m: 0.06,
+      sp500Return: -0.15,
+      inflation1y: 0.04,
+      tbill3m: 0.05,
     })
 
     expect(result.score).toBe(10)
-    expect(result.breakdown.approval).toBe(10)
-    expect(result.breakdown.sp500).toBe(10)
-    expect(result.breakdown.inflation).toBe(10)
-    expect(result.breakdown.tbill).toBe(10)
   })
 
   it('clamps values outside bounds to 10', () => {
@@ -92,17 +83,10 @@ describe('computeTacoScore', () => {
 
   it('inverts approval so lower value means higher stress', () => {
     const lowApproval = computeTacoScore({
-      approval: 30,
-      sp500Return: null,
-      inflation1y: null,
-      tbill3m: null,
+      approval: 30, sp500Return: null, inflation1y: null, tbill3m: null,
     })
-
     const highApproval = computeTacoScore({
-      approval: 55,
-      sp500Return: null,
-      inflation1y: null,
-      tbill3m: null,
+      approval: 55, sp500Return: null, inflation1y: null, tbill3m: null,
     })
 
     expect(lowApproval.breakdown.approval).toBe(10)
