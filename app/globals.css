@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0a0a0a;
+  --foreground: #fafafa;
+  --surface: #171717;
+  --muted: #a1a1aa;
+  --border: #27272a;
+  --badge-green-bg: #22c55e;
+  --badge-green-text: #052e16;
+  --badge-yellow-bg: #eab308;
+  --badge-yellow-text: #422006;
+  --badge-red-bg: #ef4444;
+  --badge-red-text: #450a0a;
+  --badge-unknown-bg: #6b7280;
+  --badge-unknown-text: #1f2937;
+  --chart-blue: #60a5fa;
+  --chart-orange: #f97316;
+  --chart-purple: #a78bfa;
+  --chart-grid: #27272a;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+.font-tabular {
+  font-variant-numeric: tabular-nums;
+}
