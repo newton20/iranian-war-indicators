@@ -17,6 +17,7 @@ interface ChartLine {
   color: string;
   yAxisId?: string;
   name: string;
+  strokeWidth?: number;
 }
 
 interface HistoricalChartProps {
@@ -89,7 +90,7 @@ export default function HistoricalChart({
             stroke={line.color}
             name={line.name}
             dot={false}
-            strokeWidth={2}
+            strokeWidth={line.strokeWidth ?? 2}
             connectNulls
           />
         ))}

@@ -37,8 +37,8 @@ export default function HormuzPanel({ latest, history, events }: HormuzPanelProp
       <HistoricalChart
         data={history}
         lines={[
-          { dataKey: 'hormuz_transits', color: '#60a5fa', name: 'Transits' },
           { dataKey: 'oil_price_brent', color: '#f97316', yAxisId: 'right', name: 'Brent Oil ($)' },
+          { dataKey: 'hormuz_transits', color: '#60a5fa', name: 'Daily Transits', strokeWidth: 2.5 },
         ]}
         events={events}
         height={320}
