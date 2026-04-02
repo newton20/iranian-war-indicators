@@ -6,7 +6,7 @@ export interface PortWatchResult {
 }
 
 const PORTWATCH_URL =
-  "https://services.arcgis.com/ue9rwulIoeLEI9bj/arcgis/rest/services/chokepoint_daily_vessel_transit/FeatureServer/0/query?where=chokepoint_id=6&outFields=date,total_vessel_count&orderByFields=date DESC&resultRecordCount=1&f=json";
+  "https://services9.arcgis.com/weJ1QsnbMYJlCHdG/arcgis/rest/services/Daily_Chokepoints_Data/FeatureServer/0/query?where=portid=%27chokepoint6%27&outFields=date,n_total&orderByFields=date+DESC&resultRecordCount=1&f=json";
 
 export async function fetchPortWatch(): Promise<{
   data: PortWatchResult | null;
@@ -21,7 +21,7 @@ export async function fetchPortWatch(): Promise<{
         throw new Error("No features returned from PortWatch");
       }
 
-      const transits = feature.total_vessel_count;
+      const transits = feature.n_total;
       if (typeof transits !== "number" || transits < 0) {
         throw new Error(`Invalid transit count: ${transits}`);
       }

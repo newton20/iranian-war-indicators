@@ -17,14 +17,21 @@ export async function fetchApproval(): Promise<{
     async (response) => {
       const html = await response.text();
 
-      // Try multiple regex patterns to find the aggregate approval percentage.
-      // RCP pages vary in structure, so we attempt several common patterns.
+      // The RCP page uses Next.js RSC streaming (self.__next_f.push calls).
+      // The approval data is embedded as escaped JSON in the streamed payload.
+      // We try multiple patterns in order of specificity.
       const patterns = [
-        /Approve\s*[:\s]*(\d{1,2}(?:\.\d+)?)\s*%/i,
-        /approval[^>]*>\s*(\d{1,2}(?:\.\d+)?)\s*%/i,
-        /class="[^"]*approve[^"]*"[^>]*>\s*(\d{1,2}(?:\.\d+)?)/i,
-        /(\d{1,2}(?:\.\d+)?)\s*%\s*<\/(?:span|td|div)[^>]*>\s*(?:<[^>]*>)*\s*(?:Approve|Approval)/i,
-        /(?:Approve|Approval)[^<]*<[^>]*>\s*(\d{1,2}(?:\.\d+)?)/i,
+        // Pattern 1: RSC JSON payload with escaped quotes (most reliable)
+        // Matches: \"name\":\"Approve\",\"affiliation\":\"...\",\"value\":\"41.1\"
+        /\\"name\\":\\"Approve\\",\\"affiliation\\":\\"[^"]*\\",\\"value\\":\\"(\d{1,2}(?:\.\d+)?)\\"/,
+        // Pattern 2: Same structure but with regular quotes (if unescaped)
+        /"name":"Approve","affiliation":"[^"]*","value":"(\d{1,2}(?:\.\d+)?)"/,
+        // Pattern 3: Rendered text "Approve 41.1%"
+        /Approve\s+(\d{1,2}(?:\.\d+)?)\s*%/,
+        // Pattern 4: Generic approve near a number
+        /[Aa]pprov\w*[^0-9]{0,80}(\d{1,2}(?:\.\d+)?)\s*%/,
+        // Pattern 5: Number near approve (reversed order)
+        /(\d{1,2}(?:\.\d+)?)\s*%[^A-Za-z]{0,40}[Aa]pprov/,
       ];
 
       let approvalValue: number | null = null;
@@ -41,28 +48,20 @@ export async function fetchApproval(): Promise<{
       }
 
       if (approvalValue === null) {
-        // Broader fallback: look for a two-digit number near "approve"
-        const broad = html.match(
-          /[Aa]pprov\w*[^0-9]{0,50}(\d{2}(?:\.\d+)?)/
-        );
-        if (broad) {
-          const val = parseFloat(broad[1]);
-          if (val >= 20 && val <= 70) {
-            approvalValue = val;
-          }
-        }
-      }
-
-      if (approvalValue === null) {
         throw new Error(
           "Could not extract approval rating from RealClearPolitics page"
         );
       }
 
-      // Try to extract a date near the approval value
-      const dateMatch = html.match(
-        /(\d{1,2}\/\d{1,2}\/\d{2,4})\s*-\s*\d{1,2}\/\d{1,2}\/\d{2,4}/
-      );
+      // Try to extract the polling date range.
+      // RCP uses formats like "3/12 - 3/31" (no year) or "3/12/2026 - 3/31/2026"
+      const dateMatch =
+        html.match(
+          /(\d{1,2}\/\d{1,2}\/\d{2,4})\s*-\s*(\d{1,2}\/\d{1,2}\/\d{2,4})/
+        ) ||
+        html.match(
+          /(\d{1,2}\/\d{1,2})\s*-\s*(\d{1,2}\/\d{1,2})/
+        );
       const pollDate = dateMatch
         ? dateMatch[0]
         : new Date().toISOString().split("T")[0];

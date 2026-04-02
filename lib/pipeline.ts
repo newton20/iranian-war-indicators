@@ -71,8 +71,25 @@ export async function runPipeline(): Promise<{
   const tbill3m = fred?.data?.tbill3m ?? fallback?.tbill_3m ?? null;
   const approvalRating =
     approval?.data?.approval ?? fallback?.approval_rating ?? null;
-  const approvalDate =
-    approval?.data?.pollDate ?? fallback?.approval_date ?? null;
+  // approval pollDate may be a range like "3/12 - 3/31" — extract the end date
+  let approvalDate: string | null = null;
+  const rawPollDate = approval?.data?.pollDate ?? null;
+  if (rawPollDate) {
+    // Try to parse "M/D - M/D" format → use end date with current year
+    const rangeMatch = rawPollDate.match(/(\d{1,2})\/(\d{1,2})\s*$/);
+    if (rangeMatch) {
+      const month = rangeMatch[1].padStart(2, '0');
+      const day = rangeMatch[2].padStart(2, '0');
+      approvalDate = `${new Date().getFullYear()}-${month}-${day}`;
+    } else {
+      // Try direct ISO parse
+      const d = new Date(rawPollDate);
+      approvalDate = isNaN(d.getTime()) ? null : d.toISOString().split('T')[0];
+    }
+  }
+  if (!approvalDate && fallback?.approval_date) {
+    approvalDate = String(fallback.approval_date);
+  }
 
   // 3. Compute TACO score
   const tacoInput: TacoInput = {
