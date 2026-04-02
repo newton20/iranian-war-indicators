@@ -34,15 +34,31 @@ export default function HormuzPanel({ latest, history, events }: HormuzPanelProp
         <p className="text-muted text-sm mt-1">vessels in transit</p>
       </div>
 
-      <HistoricalChart
-        data={history}
-        lines={[
-          { dataKey: 'oil_price_brent', color: '#f97316', yAxisId: 'right', name: 'Brent Oil ($)' },
-          { dataKey: 'hormuz_transits', color: '#60a5fa', name: 'Daily Transits', strokeWidth: 2.5 },
-        ]}
-        events={events}
-        height={320}
-      />
+      {/* Vessel transit trend — separate chart for clear visibility */}
+      <div>
+        <p className="text-muted text-xs mb-1">Daily Vessel Transits</p>
+        <HistoricalChart
+          data={history}
+          lines={[
+            { dataKey: 'hormuz_transits', color: '#60a5fa', name: 'Daily Transits', strokeWidth: 2 },
+          ]}
+          events={events}
+          height={180}
+        />
+      </div>
+
+      {/* Oil price trend */}
+      <div>
+        <p className="text-muted text-xs mb-1">Brent Crude Oil ($)</p>
+        <HistoricalChart
+          data={history}
+          lines={[
+            { dataKey: 'oil_price_brent', color: '#f97316', name: 'Brent Oil ($)' },
+          ]}
+          events={[]}
+          height={180}
+        />
+      </div>
     </div>
   );
 }
