@@ -58,7 +58,7 @@ export async function getLatestIndicator(): Promise<DailyIndicator | null> {
   const rows = await sql`
     SELECT * FROM daily_indicators ORDER BY date DESC LIMIT 1
   `;
-  return rows[0] ? (coerceRow(rows[0]) as DailyIndicator) : null;
+  return rows[0] ? (coerceRow(rows[0]) as unknown as DailyIndicator) : null;
 }
 
 export async function getIndicatorHistory(
@@ -70,7 +70,7 @@ export async function getIndicatorHistory(
     ORDER BY date DESC
     LIMIT ${days}
   `;
-  return rows.map(r => coerceRow(r) as DailyIndicator);
+  return rows.map(r => coerceRow(r) as unknown as DailyIndicator);
 }
 
 export async function getEventAnnotations(): Promise<EventAnnotation[]> {
