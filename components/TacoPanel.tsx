@@ -50,6 +50,7 @@ export default function TacoPanel({ latest, history, events }: TacoPanelProps) {
           { dataKey: 'taco_score', color: '#a78bfa', name: 'TACO Composite' },
         ]}
         events={events}
+        height={320}
       />
     </div>
   );

@@ -41,6 +41,7 @@ export default function HormuzPanel({ latest, history, events }: HormuzPanelProp
           { dataKey: 'oil_price_brent', color: '#f97316', yAxisId: 'right', name: 'Brent Oil ($)' },
         ]}
         events={events}
+        height={320}
       />
     </div>
   );
