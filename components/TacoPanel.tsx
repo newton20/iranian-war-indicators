@@ -33,9 +33,9 @@ export default function TacoPanel({ latest, history, events }: TacoPanelProps) {
 
       <div className="grid grid-cols-2 gap-3">
         <StatItem label="Approval" value={latest.approval_rating} suffix="%" />
-        <StatItem label="S&P 500 30d" value={latest.sp500_30d_return} suffix="%" />
-        <StatItem label="Inflation 1Y" value={latest.inflation_1y} suffix="%" />
-        <StatItem label="T-bill 3M" value={latest.tbill_3m} suffix="%" />
+        <StatItem label="S&P 500 30d" value={latest.sp500_30d_return !== null ? latest.sp500_30d_return * 100 : null} suffix="%" />
+        <StatItem label="Inflation 1Y" value={latest.inflation_1y !== null ? latest.inflation_1y * 100 : null} suffix="%" />
+        <StatItem label="T-bill 3M" value={latest.tbill_3m !== null ? latest.tbill_3m * 100 : null} suffix="%" />
       </div>
 
       {latest.taco_components_available < 4 && (
