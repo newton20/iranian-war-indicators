@@ -9,6 +9,11 @@ function buildFredUrl(seriesId: string, apiKey: string): string {
   return `https://api.stlouisfed.org/fred/series/observations?series_id=${seriesId}&api_key=${apiKey}&file_type=json&sort_order=desc&limit=1`;
 }
 
+const STALENESS_LIMITS: Record<string, number> = {
+  DTB3: 90,
+  EXPINF1YR: 60,
+};
+
 async function fetchSeries(
   seriesId: string,
   apiKey: string
@@ -19,21 +24,59 @@ async function fetchSeries(
     url,
     async (response) => {
       const json = await response.json();
-      const rawValue = json?.observations?.[0]?.value;
+      const observation = json?.observations?.[0];
+      const rawValue = observation?.value;
 
       if (rawValue === "." || rawValue == null) {
+        console.error(
+          `FRED parse error: missing data marker for ${seriesId}. Raw value: "${rawValue}"`
+        );
         throw new Error(`FRED returned missing data for ${seriesId}`);
       }
 
       const num = Number(rawValue);
       if (isNaN(num)) {
+        console.error(
+          `FRED parse error: non-numeric value for ${seriesId}: "${rawValue}"`
+        );
         throw new Error(
           `FRED returned non-numeric value for ${seriesId}: ${rawValue}`
         );
       }
 
+      if (!isFinite(num) || num <= 0) {
+        console.error(
+          `FRED parse error: value out of range for ${seriesId}: ${num}`
+        );
+        throw new Error(
+          `FRED parse error: value is not finite and positive for ${seriesId}: ${num}`
+        );
+      }
+
+      // Validate observation date staleness
+      const obsDate = observation?.date;
+      if (obsDate) {
+        const maxDays = STALENESS_LIMITS[seriesId] ?? 90;
+        const obsDt = new Date(obsDate);
+        const now = new Date();
+        const daysDiff =
+          (now.getTime() - obsDt.getTime()) / (1000 * 60 * 60 * 24);
+        if (daysDiff > maxDays) {
+          console.error(
+            `FRED parse error: stale data for ${seriesId}. Observation date: ${obsDate}, ${Math.round(daysDiff)} days old (limit: ${maxDays})`
+          );
+          throw new Error(
+            `FRED parse error: ${seriesId} observation is ${Math.round(daysDiff)} days old (limit: ${maxDays})`
+          );
+        }
+      }
+
       // FRED returns percentages (e.g. 2.5 for 2.5%), convert to decimal
-      return num / 100;
+      const decimal = num / 100;
+      console.log(
+        `FRED: ${seriesId} = ${num}% (${decimal}) as of ${obsDate ?? "unknown"}`
+      );
+      return decimal;
     },
     {
       timeoutMs: 15000,

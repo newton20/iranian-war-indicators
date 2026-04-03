@@ -95,12 +95,69 @@ export async function fetchYahooFinance(): Promise<{
   }
 
   try {
+    // Validate close prices are positive numbers
+    for (const closes of [sp500Result.data.closes, brentResult.data.closes]) {
+      for (const c of closes) {
+        if (c != null && (typeof c !== "number" || !isFinite(c) || c <= 0)) {
+          console.error(
+            `Yahoo Finance parse error: invalid close price detected: ${c}`
+          );
+          return {
+            data: null,
+            error: `Yahoo Finance parse error: invalid close price (${c})`,
+          };
+        }
+      }
+    }
+
+    // Validate timestamps are valid
+    for (const ts of [
+      ...sp500Result.data.timestamps,
+      ...brentResult.data.timestamps,
+    ]) {
+      if (ts != null && (typeof ts !== "number" || !isFinite(ts) || ts <= 0)) {
+        console.error(
+          `Yahoo Finance parse error: invalid timestamp detected: ${ts}`
+        );
+        return {
+          data: null,
+          error: `Yahoo Finance parse error: invalid timestamp (${ts})`,
+        };
+      }
+    }
+
     const sp500 = calculate30dReturn(
       sp500Result.data.closes,
       sp500Result.data.timestamps
     );
+
+    // Validate 30-day return is within plausible range
+    if (sp500.return30d < -0.5 || sp500.return30d > 0.5) {
+      console.error(
+        `Yahoo Finance parse error: S&P 500 30d return ${sp500.return30d} exceeds plausible range [-0.5, 0.5]`
+      );
+      return {
+        data: null,
+        error: `Yahoo Finance parse error: 30d return ${sp500.return30d} is implausible (>50% swing)`,
+      };
+    }
+
     const brentCloses = brentResult.data.closes.filter((c) => c != null);
     const brentClose = brentCloses[brentCloses.length - 1];
+
+    if (!brentClose || brentClose <= 0) {
+      console.error(
+        `Yahoo Finance parse error: invalid Brent close price: ${brentClose}`
+      );
+      return {
+        data: null,
+        error: `Yahoo Finance parse error: invalid Brent close price (${brentClose})`,
+      };
+    }
+
+    console.log(
+      `Yahoo Finance: S&P 500 ${sp500.latestClose.toFixed(2)}, 30d return ${(sp500.return30d * 100).toFixed(2)}%, Brent $${brentClose.toFixed(2)}`
+    );
 
     return {
       data: {

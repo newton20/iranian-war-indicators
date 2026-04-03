@@ -18,19 +18,45 @@ export async function fetchPortWatch(): Promise<{
       const json = await response.json();
       const feature = json?.features?.[0]?.attributes;
       if (!feature) {
-        throw new Error("No features returned from PortWatch");
+        const keys = json ? Object.keys(json) : [];
+        console.error(
+          `PortWatch parse error: no features in response. Top-level keys: [${keys.join(", ")}]`
+        );
+        throw new Error("PortWatch parse error: no features in response");
       }
 
       const transits = feature.n_total;
-      if (typeof transits !== "number" || transits < 0) {
-        throw new Error(`Invalid transit count: ${transits}`);
+      if (transits === undefined || transits === null) {
+        console.error(
+          `PortWatch parse error: n_total missing. Feature keys: [${Object.keys(feature).join(", ")}]`
+        );
+        throw new Error("PortWatch parse error: n_total is missing");
+      }
+      if (typeof transits !== "number" || isNaN(transits)) {
+        console.error(
+          `PortWatch parse error: n_total is not a valid number. Value: ${transits}, type: ${typeof transits}`
+        );
+        throw new Error(
+          `PortWatch parse error: n_total is not a valid number (${transits})`
+        );
+      }
+      if (transits < 0) {
+        console.error(`PortWatch parse error: n_total is negative (${transits})`);
+        throw new Error(`PortWatch parse error: n_total is negative (${transits})`);
       }
 
       const rawDate = feature.date;
-      const dataDate =
-        typeof rawDate === "number"
-          ? new Date(rawDate).toISOString().split("T")[0]
-          : String(rawDate);
+      if (typeof rawDate !== "number" || isNaN(rawDate) || rawDate <= 0) {
+        console.error(
+          `PortWatch parse error: invalid date field. Value: ${rawDate}, type: ${typeof rawDate}. Feature keys: [${Object.keys(feature).join(", ")}]`
+        );
+        throw new Error(
+          `PortWatch parse error: date is not a valid epoch timestamp (${rawDate})`
+        );
+      }
+
+      const dataDate = new Date(rawDate).toISOString().split("T")[0];
+      console.log(`PortWatch: ${transits} transits on ${dataDate}`);
 
       return { transits, dataDate };
     },

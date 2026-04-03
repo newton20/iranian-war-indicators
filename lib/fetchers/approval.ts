@@ -35,23 +35,42 @@ export async function fetchApproval(): Promise<{
       ];
 
       let approvalValue: number | null = null;
+      let matchedPatternIndex: number | null = null;
 
-      for (const pattern of patterns) {
-        const match = html.match(pattern);
+      for (let i = 0; i < patterns.length; i++) {
+        const match = html.match(patterns[i]);
         if (match) {
           const val = parseFloat(match[1]);
-          if (val >= 20 && val <= 70) {
-            approvalValue = val;
-            break;
+          if (isNaN(val)) {
+            console.error(
+              `Approval parse: pattern ${i + 1} matched but parseFloat returned NaN. Raw match: "${match[1]}"`
+            );
+            continue;
           }
+          if (val < 20 || val > 70) {
+            console.error(
+              `Approval parse: pattern ${i + 1} matched but value ${val} is outside valid range [20, 70]`
+            );
+            continue;
+          }
+          approvalValue = val;
+          matchedPatternIndex = i + 1;
+          break;
         }
       }
 
-      if (approvalValue === null) {
+      if (approvalValue === null || matchedPatternIndex === null) {
+        console.error(
+          "Approval parse error: no pattern produced a valid approval value. RCP HTML may have changed format."
+        );
         throw new Error(
           "Could not extract approval rating from RealClearPolitics page"
         );
       }
+
+      console.log(
+        `Approval: ${approvalValue}% (matched pattern ${matchedPatternIndex})`
+      );
 
       // Try to extract the polling date range.
       // RCP uses formats like "3/12 - 3/31" (no year) or "3/12/2026 - 3/31/2026"
