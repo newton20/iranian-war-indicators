@@ -49,12 +49,27 @@ export default function Explainer() {
               single most important chokepoint in the global economy.
             </p>
             <p>
-              This dashboard tracks daily vessel counts sourced from IMF PortWatch data.
-              The binary signal (<span className="text-green-400 font-semibold">OPEN</span> /{" "}
-              <span className="text-red-400 font-semibold">CLOSED</span>) plus the Brent
-              crude oil price overlay tells the whole story. If ships are moving and oil
-              prices are stable, the crisis is priced in. If ships stop and oil spikes,
-              the market is behind the curve.
+              This dashboard tracks <strong className="text-white">tanker traffic specifically</strong>,
+              not just total vessel counts. Tankers carry the oil. That is the signal that
+              matters. We also break down vessel types&mdash;tankers, containers, dry bulk,
+              cargo&mdash;so you can see exactly what is moving and what is not.
+            </p>
+            <p>
+              The strait status uses a 4-state system sourced from IMF PortWatch data:{" "}
+              <span className="text-green-400 font-semibold">OPEN</span> means tankers are
+              flowing.{" "}
+              <span className="text-yellow-400 font-semibold">RESTRICTED</span> means ships
+              move but tankers do not&mdash;this is the economic closure, the one that
+              matters for oil.{" "}
+              <span className="text-red-400 font-semibold">CLOSED</span> means no vessels
+              at all.{" "}
+              <span className="text-zinc-400 font-semibold">UNKNOWN</span> means data is
+              unavailable.
+            </p>
+            <p>
+              The Brent crude oil price overlay completes the picture. If tankers are moving
+              and oil prices are stable, the crisis is priced in. If tankers stop and oil
+              spikes, the market is behind the curve.
             </p>
           </div>
         </div>
@@ -95,17 +110,21 @@ export default function Explainer() {
             <ul className="space-y-2 list-none pl-0">
               <li>
                 <span className="inline-block w-3 h-3 rounded-full bg-green-500 mr-2 align-middle" />
-                <strong className="text-white">GREEN</strong> &mdash; Managed crisis. Markets are right. Move on with your day.
+                <strong className="text-white">GREEN</strong> &mdash; Tankers flowing, TACO low. Managed crisis. Move on with your day.
               </li>
               <li>
                 <span className="inline-block w-3 h-3 rounded-full bg-yellow-500 mr-2 align-middle" />
-                <strong className="text-white">YELLOW</strong> &mdash; One indicator is stressed. Pay attention.
+                <strong className="text-white">YELLOW</strong> &mdash; Tanker traffic restricted OR TACO elevated. One signal is stressed. Pay attention.
               </li>
               <li>
                 <span className="inline-block w-3 h-3 rounded-full bg-red-500 mr-2 align-middle" />
-                <strong className="text-white">RED</strong> &mdash; Both indicators alarming. Prepare for disruption.
+                <strong className="text-white">RED</strong> &mdash; Tankers stopped AND TACO breaking. Both signals alarming. Prepare for disruption.
               </li>
             </ul>
+            <p>
+              Use the time range filter (7D / 30D / 90D / 1Y / ALL) to zoom in on recent
+              moves or zoom out for the full picture.
+            </p>
             <p>
               Don&apos;t trade on this. Don&apos;t panic. Just stay informed.
             </p>

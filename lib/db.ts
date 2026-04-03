@@ -1,30 +1,57 @@
 import { neon } from "@neondatabase/serverless";
 
+let _sql: ReturnType<typeof neon> | null = null;
 function getDb() {
-  const sql = neon(process.env.DATABASE_URL!);
-  return sql;
+  if (!_sql) {
+    const dbUrl = process.env.DATABASE_URL;
+    if (!dbUrl) {
+      throw new Error("DATABASE_URL environment variable is not configured");
+    }
+    _sql = neon(dbUrl);
+  }
+  return _sql;
 }
 
 // Neon returns DECIMAL as strings and DATE as Date objects.
-// This coerces them to the expected JS types.
-function coerceRow(row: Record<string, unknown>): Record<string, unknown> {
-  const result = { ...row };
-  // Coerce dates to ISO strings
-  for (const key of ['date', 'approval_date', 'pipeline_run_at', 'created_at']) {
-    if (result[key] instanceof Date) {
-      result[key] = (result[key] as Date).toISOString();
-    } else if (result[key] !== null && result[key] !== undefined) {
-      result[key] = String(result[key]);
-    }
-  }
-  // Coerce numeric strings to numbers
-  for (const key of ['oil_price_brent', 'approval_rating', 'sp500_30d_return', 'inflation_1y', 'tbill_3m', 'taco_score']) {
-    if (typeof result[key] === 'string') {
-      result[key] = parseFloat(result[key] as string);
-      if (isNaN(result[key] as number)) result[key] = null;
-    }
-  }
-  return result;
+// This coerces them to the expected JS types with full field mapping.
+function coerceRow(row: Record<string, unknown>): DailyIndicator {
+  const coerceDate = (v: unknown): string => {
+    if (v instanceof Date) return v.toISOString();
+    return v !== null && v !== undefined ? String(v) : '';
+  };
+  const coerceNum = (v: unknown): number | null => {
+    if (v === null || v === undefined) return null;
+    const n = typeof v === 'string' ? parseFloat(v) : Number(v);
+    return isNaN(n) ? null : n;
+  };
+  const coerceInt = (v: unknown): number | null => {
+    if (v === null || v === undefined) return null;
+    const n = Number(v);
+    return isNaN(n) ? null : n;
+  };
+
+  return {
+    id: Number(row.id),
+    date: coerceDate(row.date),
+    hormuz_transits: coerceInt(row.hormuz_transits),
+    hormuz_status: row.hormuz_status ? String(row.hormuz_status) : null,
+    oil_price_brent: coerceNum(row.oil_price_brent),
+    approval_rating: coerceNum(row.approval_rating),
+    approval_date: row.approval_date ? coerceDate(row.approval_date) : null,
+    sp500_30d_return: coerceNum(row.sp500_30d_return),
+    inflation_1y: coerceNum(row.inflation_1y),
+    tbill_3m: coerceNum(row.tbill_3m),
+    taco_score: coerceNum(row.taco_score),
+    taco_components_available: Number(row.taco_components_available ?? 0),
+    n_tanker: coerceInt(row.n_tanker),
+    n_container: coerceInt(row.n_container),
+    n_dry_bulk: coerceInt(row.n_dry_bulk),
+    n_cargo: coerceInt(row.n_cargo),
+    risk_badge: row.risk_badge ? String(row.risk_badge) : null,
+    data_quality: String(row.data_quality ?? 'complete'),
+    pipeline_run_at: coerceDate(row.pipeline_run_at),
+    created_at: coerceDate(row.created_at),
+  };
 }
 
 export interface DailyIndicator {
@@ -61,8 +88,8 @@ export async function getLatestIndicator(): Promise<DailyIndicator | null> {
   const sql = getDb();
   const rows = await sql`
     SELECT * FROM daily_indicators ORDER BY date DESC LIMIT 1
-  `;
-  return rows[0] ? (coerceRow(rows[0]) as unknown as DailyIndicator) : null;
+  ` as Record<string, unknown>[];
+  return rows[0] ? coerceRow(rows[0]) : null;
 }
 
 export async function getIndicatorHistory(
@@ -73,19 +100,23 @@ export async function getIndicatorHistory(
     SELECT * FROM daily_indicators
     ORDER BY date DESC
     LIMIT ${days}
-  `;
-  return rows.map(r => coerceRow(r) as unknown as DailyIndicator);
+  ` as Record<string, unknown>[];
+  return rows.map(coerceRow);
 }
 
 export async function getEventAnnotations(): Promise<EventAnnotation[]> {
   const sql = getDb();
   const rows = await sql`
     SELECT * FROM event_annotations ORDER BY date ASC
-  `;
+  ` as Record<string, unknown>[];
   return rows.map(r => {
-    const row = { ...r };
-    if (row.date instanceof Date) row.date = (row.date as Date).toISOString().split('T')[0];
-    return row as EventAnnotation;
+    const date = r.date instanceof Date ? r.date.toISOString().split('T')[0] : String(r.date ?? '');
+    return {
+      id: Number(r.id),
+      date,
+      label: String(r.label ?? ''),
+      category: String(r.category ?? ''),
+    } as EventAnnotation;
   });
 }
 
@@ -162,9 +193,9 @@ export async function getLastKnownValues(): Promise<{
     WHERE data_quality != 'stale'
     ORDER BY date DESC
     LIMIT 1
-  `;
-  return (
-    (rows[0] as { approval_rating: number | null; approval_date: string | null; sp500_30d_return: number | null; inflation_1y: number | null; tbill_3m: number | null; oil_price_brent: number | null; hormuz_transits: number | null }) ?? {
+  ` as Record<string, unknown>[];
+  if (!rows[0]) {
+    return {
       approval_rating: null,
       approval_date: null,
       sp500_30d_return: null,
@@ -172,6 +203,28 @@ export async function getLastKnownValues(): Promise<{
       tbill_3m: null,
       oil_price_brent: null,
       hormuz_transits: null,
-    }
-  );
+    };
+  }
+
+  const coerceNum = (v: unknown): number | null => {
+    if (v === null || v === undefined) return null;
+    const n = typeof v === 'string' ? parseFloat(v) : Number(v);
+    return isNaN(n) ? null : n;
+  };
+  const coerceDate = (v: unknown): string | null => {
+    if (v === null || v === undefined) return null;
+    if (v instanceof Date) return v.toISOString();
+    return String(v);
+  };
+
+  const r = rows[0];
+  return {
+    approval_rating: coerceNum(r.approval_rating),
+    approval_date: coerceDate(r.approval_date),
+    sp500_30d_return: coerceNum(r.sp500_30d_return),
+    inflation_1y: coerceNum(r.inflation_1y),
+    tbill_3m: coerceNum(r.tbill_3m),
+    oil_price_brent: coerceNum(r.oil_price_brent),
+    hormuz_transits: coerceNum(r.hormuz_transits),
+  };
 }

@@ -5,6 +5,7 @@ export interface FredResult {
   tbill3m: number;
 }
 
+// NOTE: API key is in the query string (FRED API requirement). Ensure error logging never exposes the full URL.
 function buildFredUrl(seriesId: string, apiKey: string): string {
   return `https://api.stlouisfed.org/fred/series/observations?series_id=${seriesId}&api_key=${apiKey}&file_type=json&sort_order=desc&limit=1`;
 }
@@ -14,13 +15,17 @@ const STALENESS_LIMITS: Record<string, number> = {
   EXPINF1YR: 60,
 };
 
+function redactApiKey(text: string, apiKey: string): string {
+  return text.replaceAll(apiKey, 'REDACTED');
+}
+
 async function fetchSeries(
   seriesId: string,
   apiKey: string
 ): Promise<{ data: number | null; error: string | null }> {
   const url = buildFredUrl(seriesId, apiKey);
 
-  return safeFetch<number>(
+  const result = await safeFetch<number>(
     url,
     async (response) => {
       const json = await response.json();
@@ -83,6 +88,12 @@ async function fetchSeries(
       validateResult: (v) => typeof v === "number" && isFinite(v),
     }
   );
+
+  // Redact API key from any error messages before returning
+  if (result.error) {
+    return { data: null, error: redactApiKey(result.error, apiKey) };
+  }
+  return result;
 }
 
 export async function fetchFred(): Promise<{
