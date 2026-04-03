@@ -104,12 +104,16 @@ export async function runPipeline(): Promise<{
   };
   const taco = computeTacoScore(tacoInput);
 
-  // 4. Determine Hormuz status
+  // 4. Determine Hormuz status (tanker-prioritized)
   let hormuzStatus: HormuzStatus;
   if (hormuzTransits === null) {
     hormuzStatus = "UNKNOWN";
-  } else if (hormuzTransits === 0) {
+  } else if (nTanker === 0 && hormuzTransits === 0) {
     hormuzStatus = "CLOSED";
+  } else if (nTanker === 0 && hormuzTransits > 0) {
+    hormuzStatus = "RESTRICTED";
+  } else if (nTanker !== null && nTanker > 0 && nTanker <= 3) {
+    hormuzStatus = "RESTRICTED";
   } else {
     hormuzStatus = "OPEN";
   }

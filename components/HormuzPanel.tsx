@@ -11,9 +11,10 @@ interface HormuzPanelProps {
 }
 
 const STATUS_STYLES: Record<string, { color: string; label: string }> = {
-  OPEN:    { color: '#22c55e', label: 'OPEN' },
-  CLOSED:  { color: '#ef4444', label: 'CLOSED' },
-  UNKNOWN: { color: '#6b7280', label: 'UNKNOWN' },
+  OPEN:       { color: '#22c55e', label: 'OPEN' },
+  RESTRICTED: { color: '#f97316', label: 'RESTRICTED' },
+  CLOSED:     { color: '#ef4444', label: 'CLOSED' },
+  UNKNOWN:    { color: '#6b7280', label: 'UNKNOWN' },
 };
 
 export default function HormuzPanel({ latest, history, events }: HormuzPanelProps) {
@@ -30,9 +31,12 @@ export default function HormuzPanel({ latest, history, events }: HormuzPanelProp
 
       <div>
         <p className="font-mono font-bold text-4xl font-tabular text-foreground">
-          {latest.hormuz_transits ?? '—'}
+          {latest.n_tanker ?? '—'}
         </p>
-        <p className="text-muted text-sm mt-1">vessels in transit</p>
+        <p className="text-muted text-sm mt-1">oil tankers in transit</p>
+        <p className="text-muted text-xs mt-0.5 opacity-70">
+          ({latest.hormuz_transits ?? '—'} total vessels)
+        </p>
       </div>
 
       <VesselBreakdown

@@ -25,4 +25,12 @@ describe('computeBadge', () => {
   it('returns YELLOW for UNKNOWN status regardless of TACO score', () => {
     expect(computeBadge('UNKNOWN', 5.0)).toBe('YELLOW')
   })
+
+  it('returns YELLOW for RESTRICTED + low TACO score', () => {
+    expect(computeBadge('RESTRICTED', 3.0)).toBe('YELLOW')
+  })
+
+  it('returns RED for RESTRICTED + high TACO score', () => {
+    expect(computeBadge('RESTRICTED', 8.0)).toBe('RED')
+  })
 })
