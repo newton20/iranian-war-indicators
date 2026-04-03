@@ -36,10 +36,10 @@ export default function HormuzPanel({ latest, history, events }: HormuzPanelProp
       </div>
 
       <VesselBreakdown
-        nTanker={(latest as unknown as Record<string, unknown>).n_tanker as number | null ?? null}
-        nContainer={(latest as unknown as Record<string, unknown>).n_container as number | null ?? null}
-        nDryBulk={(latest as unknown as Record<string, unknown>).n_dry_bulk as number | null ?? null}
-        nCargo={(latest as unknown as Record<string, unknown>).n_cargo as number | null ?? null}
+        nTanker={latest.n_tanker}
+        nContainer={latest.n_container}
+        nDryBulk={latest.n_dry_bulk}
+        nCargo={latest.n_cargo}
         total={latest.hormuz_transits}
       />
 
