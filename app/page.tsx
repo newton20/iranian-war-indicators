@@ -1,9 +1,8 @@
 import { getLatestIndicator, getIndicatorHistory, getEventAnnotations } from "@/lib/db";
 import RiskBadge from "@/components/RiskBadge";
-import HormuzPanel from "@/components/HormuzPanel";
-import TacoPanel from "@/components/TacoPanel";
 import EmptyState from "@/components/EmptyState";
 import Explainer from "@/components/Explainer";
+import DashboardClient from "@/components/DashboardClient";
 
 export const revalidate = 3600; // ISR: revalidate every hour
 
@@ -49,18 +48,7 @@ export default async function Dashboard() {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <HormuzPanel
-          latest={latest}
-          history={reversedHistory}
-          events={events}
-        />
-        <TacoPanel
-          latest={latest}
-          history={reversedHistory}
-          events={events}
-        />
-      </div>
+      <DashboardClient latest={latest} history={reversedHistory} events={events} />
 
       <Explainer />
 

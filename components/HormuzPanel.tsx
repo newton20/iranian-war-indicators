@@ -2,6 +2,7 @@
 
 import type { DailyIndicator, EventAnnotation } from '@/lib/db';
 import HistoricalChart from './HistoricalChart';
+import VesselBreakdown from './VesselBreakdown';
 
 interface HormuzPanelProps {
   latest: DailyIndicator;
@@ -34,6 +35,14 @@ export default function HormuzPanel({ latest, history, events }: HormuzPanelProp
         <p className="text-muted text-sm mt-1">vessels in transit</p>
       </div>
 
+      <VesselBreakdown
+        nTanker={(latest as unknown as Record<string, unknown>).n_tanker as number | null ?? null}
+        nContainer={(latest as unknown as Record<string, unknown>).n_container as number | null ?? null}
+        nDryBulk={(latest as unknown as Record<string, unknown>).n_dry_bulk as number | null ?? null}
+        nCargo={(latest as unknown as Record<string, unknown>).n_cargo as number | null ?? null}
+        total={latest.hormuz_transits}
+      />
+
       {/* Vessel transit trend — separate chart for clear visibility */}
       <div>
         <p className="text-muted text-xs mb-1">Daily Vessel Transits</p>
@@ -41,6 +50,7 @@ export default function HormuzPanel({ latest, history, events }: HormuzPanelProp
           data={history}
           lines={[
             { dataKey: 'hormuz_transits', color: '#60a5fa', name: 'Daily Transits', strokeWidth: 2 },
+            { dataKey: 'n_tanker', color: '#f59e0b', name: 'Tankers', strokeWidth: 1.5, strokeDasharray: '4 3' },
           ]}
           events={events}
           height={180}

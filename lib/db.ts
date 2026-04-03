@@ -40,6 +40,10 @@ export interface DailyIndicator {
   tbill_3m: number | null;
   taco_score: number | null;
   taco_components_available: number;
+  n_tanker: number | null;
+  n_container: number | null;
+  n_dry_bulk: number | null;
+  n_cargo: number | null;
   risk_badge: string | null;
   data_quality: string;
   pipeline_run_at: string;
@@ -99,6 +103,10 @@ export async function upsertDailyIndicator(data: {
   taco_components_available: number;
   risk_badge: string;
   data_quality: string;
+  n_tanker: number | null;
+  n_container: number | null;
+  n_dry_bulk: number | null;
+  n_cargo: number | null;
 }): Promise<void> {
   const sql = getDb();
   await sql`
@@ -106,12 +114,14 @@ export async function upsertDailyIndicator(data: {
       date, hormuz_transits, hormuz_status, oil_price_brent,
       approval_rating, approval_date, sp500_30d_return,
       inflation_1y, tbill_3m, taco_score, taco_components_available,
-      risk_badge, data_quality, pipeline_run_at
+      risk_badge, data_quality, n_tanker, n_container, n_dry_bulk, n_cargo,
+      pipeline_run_at
     ) VALUES (
       ${data.date}, ${data.hormuz_transits}, ${data.hormuz_status}, ${data.oil_price_brent},
       ${data.approval_rating}, ${data.approval_date}, ${data.sp500_30d_return},
       ${data.inflation_1y}, ${data.tbill_3m}, ${data.taco_score}, ${data.taco_components_available},
-      ${data.risk_badge}, ${data.data_quality}, NOW()
+      ${data.risk_badge}, ${data.data_quality}, ${data.n_tanker}, ${data.n_container}, ${data.n_dry_bulk}, ${data.n_cargo},
+      NOW()
     )
     ON CONFLICT (date) DO UPDATE SET
       hormuz_transits = EXCLUDED.hormuz_transits,
@@ -126,6 +136,10 @@ export async function upsertDailyIndicator(data: {
       taco_components_available = EXCLUDED.taco_components_available,
       risk_badge = EXCLUDED.risk_badge,
       data_quality = EXCLUDED.data_quality,
+      n_tanker = EXCLUDED.n_tanker,
+      n_container = EXCLUDED.n_container,
+      n_dry_bulk = EXCLUDED.n_dry_bulk,
+      n_cargo = EXCLUDED.n_cargo,
       pipeline_run_at = NOW()
   `;
 }

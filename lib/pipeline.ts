@@ -62,6 +62,10 @@ export async function runPipeline(): Promise<{
   // Build values with fallbacks
   const hormuzTransits =
     portwatch?.data?.transits ?? fallback?.hormuz_transits ?? null;
+  const nTanker = portwatch?.data?.nTanker ?? null;
+  const nContainer = portwatch?.data?.nContainer ?? null;
+  const nDryBulk = portwatch?.data?.nDryBulk ?? null;
+  const nCargo = portwatch?.data?.nCargo ?? null;
   const oilPriceBrent =
     yahoo?.data?.brentClose ?? fallback?.oil_price_brent ?? null;
   const sp50030dReturn =
@@ -139,6 +143,10 @@ export async function runPipeline(): Promise<{
       taco_components_available: taco.componentsAvailable,
       risk_badge: badge,
       data_quality: dataQuality,
+      n_tanker: nTanker,
+      n_container: nContainer,
+      n_dry_bulk: nDryBulk,
+      n_cargo: nCargo,
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "unknown DB error";

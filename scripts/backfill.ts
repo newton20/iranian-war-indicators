@@ -267,6 +267,10 @@ async function main() {
       taco_components_available: taco.componentsAvailable,
       risk_badge: badge,
       data_quality: quality,
+      n_tanker: null,
+      n_container: null,
+      n_dry_bulk: null,
+      n_cargo: null,
     });
 
     upserted++;
